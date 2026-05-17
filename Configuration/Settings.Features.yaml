@@ -24,6 +24,8 @@ Neos:
           showVariantsEditor: false
           # Use the new media selection UI in the content module
           useNewMediaSelection: true
+          # Enable the asset upload screen secondary editor (allows uploading new assets from the inspector with upload properties like copyright notice)
+          useNewAssetUpload: true
           # Additional filter options
           mediaTypeFilterOptions:
             image:
