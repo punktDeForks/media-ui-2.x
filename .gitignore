@@ -32,3 +32,11 @@ Resources/Public/AssetEditor
 .idea/
 /screenshots
 /packages/dev-server/public/dist
+notes/
+
+# 
+# AI & Agent
+#
+.cursor/
+.cursorrules
+.claude-flow/
