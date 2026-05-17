@@ -76,3 +76,33 @@
 .warning {
     color: var(--theme-colors-Warn);
 }
+
+.preview {
+    display: flex;
+    flex-direction: row;
+    gap: var(--theme-spacing-Full);
+    width: 100%;
+    margin-bottom: var(--theme-spacing-Full);
+}
+
+.thumbWide {
+    width: 200px;
+    height: 200px;
+    flex-shrink: 0;
+}
+
+.properties {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    gap: var(--theme-spacing-Quarter);
+}
+
+.textInput,
+.textArea {
+    width: 100%;
+}
+
+.checkBox {
+    margin-right: 0;
+}

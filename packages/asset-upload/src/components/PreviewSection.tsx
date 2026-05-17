@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { Dispatch, SetStateAction } from 'react';
+import { SetterOrUpdater } from 'recoil';
 
 import { useIntl } from '@media-ui/core';
 
@@ -6,20 +7,32 @@ import FilePreview from './FilePreview';
 
 import classes from './PreviewSection.module.css';
 
+type FilesUploadStateWithFiles = { files: FilesUploadState };
+
 interface PreviewSectionProps {
     files: FilesUploadState;
     loading: boolean;
     uploadState: FileUploadResult[];
+    dialogState?: FilesUploadStateWithFiles;
+    setFiles?: Dispatch<SetStateAction<FilesUploadState>>;
+    setUploadPossible?: SetterOrUpdater<boolean>;
 }
 
-const PreviewSection: React.FC<PreviewSectionProps> = ({ files, loading, uploadState }: PreviewSectionProps) => {
+const PreviewSection: React.FC<PreviewSectionProps> = ({
+    files,
+    loading,
+    uploadState,
+    dialogState,
+    setFiles,
+    setUploadPossible,
+}: PreviewSectionProps) => {
     const { translate } = useIntl();
 
     // FIXME: Mapping the uploadState to the files name is not the best solution as the same filename might be used multiple times
 
     return (
         <aside className={classes.fileList}>
-            {files.selected.length > 0 && (
+            {files.selected.length > 0 ? (
                 <>
                     <h4 className={classes.fileListHeader}>
                         {translate('uploadDialog.fileList.header', 'Selected files')}
@@ -30,11 +43,14 @@ const PreviewSection: React.FC<PreviewSectionProps> = ({ files, loading, uploadS
                             loading={loading}
                             fileState={uploadState.find((result) => result.filename === file.name)}
                             key={file.id}
+                            dialogState={dialogState}
+                            setFiles={setFiles}
+                            setUploadPossible={setUploadPossible}
                         />
                     ))}
                 </>
-            )}
-            {files.rejected.length > 0 && (
+            ) : null}
+            {files.rejected.length > 0 ? (
                 <>
                     <h4 className={classes.fileListHeader}>
                         {translate('uploadDialog.fileList.failedUploadsHeader', 'Failed uploads')}
@@ -44,11 +60,14 @@ const PreviewSection: React.FC<PreviewSectionProps> = ({ files, loading, uploadS
                             file={file}
                             fileState={uploadState.find((result) => result.filename === file.name)}
                             key={file.id}
+                            dialogState={dialogState}
+                            setFiles={setFiles}
+                            setUploadPossible={setUploadPossible}
                         />
                     ))}
                 </>
-            )}
-            {files.finished.length > 0 && (
+            ) : null}
+            {files.finished.length > 0 ? (
                 <>
                     <h4 className={classes.fileListHeader}>
                         {translate('uploadDialog.fileList.successfulUploadsHeader', 'Successful uploads')}
@@ -58,10 +77,13 @@ const PreviewSection: React.FC<PreviewSectionProps> = ({ files, loading, uploadS
                             file={file}
                             fileState={uploadState.find((result) => result.filename === file.name)}
                             key={file.id}
+                            dialogState={dialogState}
+                            setFiles={setFiles}
+                            setUploadPossible={setUploadPossible}
                         />
                     ))}
                 </>
-            )}
+            ) : null}
         </aside>
     );
 };

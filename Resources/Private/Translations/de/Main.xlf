@@ -85,6 +85,10 @@
                 <source>Replacement finished</source>
                 <target>Die Datei wurde ersetzt</target>
             </trans-unit>
+            <trans-unit id="uploadDialog.copyrightNoticeNotNeeded" xml:space="preserve" approved="yes">
+                <source>Copyright notice not needed</source>
+                <target>Copyright-Hinweis nicht erforderlich</target>
+            </trans-unit>
             <trans-unit id="assetReplacement.error" xml:space="preserve" approved="yes">
                 <source>Replacement failed</source>
                 <target>Ersetzen der Datei fehlgeschlagen</target>

@@ -65,6 +65,9 @@
             <trans-unit id="uploadDialog.replacementFinished" xml:space="preserve" approved="yes">
                 <source>Replacement finished</source>
             </trans-unit>
+            <trans-unit id="uploadDialog.copyrightNoticeNotNeeded" xml:space="preserve" approved="yes">
+                <source>Copyright notice not needed</source>
+            </trans-unit>
             <trans-unit id="assetReplacement.error" xml:space="preserve" approved="yes">
                 <source>Replacement failed</source>
             </trans-unit>

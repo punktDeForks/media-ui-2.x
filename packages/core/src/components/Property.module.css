@@ -1,0 +1,32 @@
+.property {
+    display: flex;
+    flex-direction: column;
+    gap: var(--theme-spacing-Quarter);
+    margin-bottom: var(--theme-spacing-Half);
+}
+
+.propertyCheckbox {
+    flex-direction: row;
+    align-items: center;
+    gap: var(--theme-spacing-Half);
+}
+
+.propertyCheckbox .label {
+    order: 2;
+    margin: 0;
+}
+
+.label {
+    display: block;
+    font-size: var(--theme-fontSize-small, 12px);
+    line-height: 1.2;
+    color: var(--theme-colors-PrimaryText, #fff);
+}
+
+.value {
+    display: block;
+}
+
+.value > * {
+    width: 100%;
+}

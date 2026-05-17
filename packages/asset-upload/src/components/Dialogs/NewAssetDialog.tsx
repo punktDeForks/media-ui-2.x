@@ -1,14 +1,16 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect } from 'react';
+import { useRecoilState } from 'recoil';
 
 import { Button } from '@neos-project/react-ui-components';
 
 import { useIntl, useNotify } from '@media-ui/core';
 import { Dialog } from '@media-ui/core/src/components';
+import { useAssetsQuery, useConfigQuery } from '@media-ui/core/src/hooks';
 
 import UploadSection from '../UploadSection';
 import PreviewSection from '../PreviewSection';
 import { useUploadDialogState, useUploadFiles } from '../../hooks';
-import { useAssetsQuery } from '@media-ui/core/src/hooks';
+import { uploadPossibleState } from '../../state';
 
 import classes from './NewAssetDialog.module.css';
 
@@ -18,7 +20,28 @@ const NewAssetDialog: React.FC = () => {
     const { uploadFiles, uploadState, loading } = useUploadFiles();
     const { state: dialogState, closeDialog, setFiles } = useUploadDialogState();
     const { refetch } = useAssetsQuery();
-    const uploadPossible = !loading && dialogState.files.selected.length > 0;
+    const { config } = useConfigQuery();
+    const [uploadPossible, setUploadPossible] = useRecoilState(uploadPossibleState);
+
+    // Reset/initialize uploadPossible when selected files change: if no required fields are configured,
+    // having files selected is enough; otherwise rely on FilePreview onChange to flip the atom.
+    useEffect(() => {
+        const noRequiredFields =
+            !config.uploadPropertyRequireTitle &&
+            !config.uploadPropertyRequireCaption &&
+            !config.uploadPropertyRequireCopyrightNotice;
+        if (noRequiredFields) {
+            setUploadPossible(dialogState.files.selected.length > 0);
+        }
+    }, [
+        dialogState.files.selected,
+        config.uploadPropertyRequireTitle,
+        config.uploadPropertyRequireCaption,
+        config.uploadPropertyRequireCopyrightNotice,
+        setUploadPossible,
+    ]);
+
+    const canUpload = uploadPossible && !loading && dialogState.files.selected.length > 0;
 
     const handleUpload = useCallback(() => {
         uploadFiles(dialogState.files.selected)
@@ -80,13 +103,7 @@ const NewAssetDialog: React.FC = () => {
                         ? translate('uploadDialog.close', 'Close')
                         : translate('uploadDialog.cancel', 'Cancel')}
                 </Button>,
-                <Button
-                    key="upload"
-                    style="success"
-                    hoverStyle="success"
-                    disabled={!uploadPossible}
-                    onClick={handleUpload}
-                >
+                <Button key="upload" style="success" hoverStyle="success" disabled={!canUpload} onClick={handleUpload}>
                     {translate('uploadDialog.upload', 'Upload')}
                 </Button>,
             ]}
@@ -94,7 +111,14 @@ const NewAssetDialog: React.FC = () => {
         >
             <section className={classes.uploadArea}>
                 <UploadSection files={dialogState.files.selected} loading={loading} onSetFiles={handleSetFiles} />
-                <PreviewSection files={dialogState.files} loading={loading} uploadState={uploadState} />
+                <PreviewSection
+                    files={dialogState.files}
+                    loading={loading}
+                    uploadState={uploadState}
+                    dialogState={dialogState}
+                    setFiles={setFiles}
+                    setUploadPossible={setUploadPossible}
+                />
             </section>
         </Dialog>
     );
