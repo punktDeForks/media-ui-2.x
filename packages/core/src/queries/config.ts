@@ -10,6 +10,12 @@ const CONFIG = gql`
             canManageAssetCollections
             canManageTags
             canManageAssets
+            uploadPropertyShowTitle
+            uploadPropertyRequireTitle
+            uploadPropertyShowCaption
+            uploadPropertyRequireCaption
+            uploadPropertyShowCopyrightNotice
+            uploadPropertyRequireCopyrightNotice
         }
     }
 `;

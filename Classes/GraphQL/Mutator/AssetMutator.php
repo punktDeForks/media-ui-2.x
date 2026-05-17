@@ -307,6 +307,7 @@ class AssetMutator
         Types\AssetSourceId $assetSourceId,
         Types\UploadedFile $file,
         Types\AssetReplacementOptions $options,
+        ?Types\UploadProperty $uploadProperties = null,
     ): Types\FileUploadResult {
         $asset = $this->assetSourceContext->getAsset($id, $assetSourceId);
         if (!$asset) {
@@ -355,6 +356,10 @@ class AssetMutator
                     $resource,
                     $options->toArray()
                 );
+                if ($uploadProperties) {
+                    $this->applyUploadProperties($asset, $uploadProperties);
+                    $this->assetRepository->update($asset);
+                }
                 return Types\FileUploadResult::fromSuccess(self::STATE_REPLACED, $filename);
             } catch (\Exception $e) {
                 $this->logger->error(
@@ -450,6 +455,7 @@ class AssetMutator
         Types\AssetSourceId $assetSourceId,
         ?Types\TagId $tagId = null,
         ?Types\AssetCollectionId $assetCollectionId = null,
+        ?Types\UploadProperty $uploadProperties = null,
     ): Types\FileUploadResult {
         if ($assetSourceId->value !== 'neos') {
             return Types\FileUploadResult::fromError(self::STATE_UNSUPPORTED);
@@ -477,6 +483,9 @@ class AssetMutator
                     $asset = new $className($resource);
 
                     if ($this->persistenceManager->isNewObject($asset)) {
+                        if ($uploadProperties) {
+                            $this->applyUploadProperties($asset, $uploadProperties);
+                        }
                         if ($tagId) {
                             /** @var Tag $tag */
                             $tag = $this->tagRepository->findByIdentifier($tagId->value);
@@ -499,7 +508,12 @@ class AssetMutator
 
                         $this->assetRepository->add($asset);
                         $result = self::STATE_ADDED;
-                        return Types\FileUploadResult::fromSuccess($result, Types\Filename::fromString($filename));
+                        $assetId = Types\AssetId::fromString($this->persistenceManager->getIdentifierByObject($asset));
+                        return Types\FileUploadResult::fromSuccess(
+                            $result,
+                            Types\Filename::fromString($filename),
+                            $assetId
+                        );
                     }
                 } catch (IllegalObjectTypeException $e) {
                     $this->logger->error('Type of uploaded file cannot be stored: ' . $e->getMessage());
@@ -519,19 +533,35 @@ class AssetMutator
         Types\AssetSourceId $assetSourceId,
         ?Types\TagId $tagId = null,
         ?Types\AssetCollectionId $assetCollectionId = null,
+        ?Types\UploadPropertys $uploadProperties = null,
     ): Types\FileUploadResults {
         if ($assetSourceId->value !== 'neos') {
             return Types\FileUploadResults::fromArray([Types\FileUploadResult::fromError(self::STATE_UNSUPPORTED)]);
         }
         $results = [];
         foreach ($files as $file) {
+            $properties = $uploadProperties?->findByFilename($file->clientFilename);
             $results[$file->clientFilename] = $this->uploadFile(
                 $file,
                 $assetSourceId,
                 $tagId,
                 $assetCollectionId,
+                $properties,
             );
         }
         return Types\FileUploadResults::fromArray($results);
+    }
+
+    private function applyUploadProperties(Asset $asset, Types\UploadProperty $properties): void
+    {
+        if ($properties->title !== null && $properties->title !== '') {
+            $asset->setTitle($properties->title);
+        }
+        if ($properties->caption !== null && $properties->caption !== '') {
+            $asset->setCaption($properties->caption);
+        }
+        if ($properties->copyrightNotice !== null && $properties->copyrightNotice !== '') {
+            $asset->setCopyrightNotice($properties->copyrightNotice);
+        }
     }
 }

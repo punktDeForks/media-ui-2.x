@@ -6,3 +6,15 @@ Flowpack:
         debugMode: false
         # The "Access-Control-Allow-Origin" response header
         corsOrigin: '*'
+      # Properties exposed in the asset upload dialog (per-property show/required toggles)
+      upload:
+        properties:
+          title:
+            show: false
+            required: false
+          caption:
+            show: false
+            required: false
+          copyrightNotice:
+            show: true
+            required: false

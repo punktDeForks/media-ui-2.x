@@ -201,6 +201,8 @@ final class MediaApi
     {
         $defaultAssetCollection = $this->assetCollectionService->getDefaultCollectionForCurrentSite();
 
+        $uploadProperties = $this->settings['upload']['properties'] ?? [];
+
         return instantiate(Types\Config::class, [
             'uploadMaxFileSize' => $this->getMaximumFileUploadSize(),
             'uploadMaxFileUploadLimit' => $this->getMaximumFileUploadLimit(),
@@ -213,6 +215,12 @@ final class MediaApi
                 'Flowpack.Media.Ui:ManageAssetCollections'
             ),
             'canManageAssets' => $this->privilegeManager->isPrivilegeTargetGranted('Flowpack.Media.Ui:ManageAssets'),
+            'uploadPropertyShowTitle' => (bool) ($uploadProperties['title']['show'] ?? false),
+            'uploadPropertyRequireTitle' => (bool) ($uploadProperties['title']['required'] ?? false),
+            'uploadPropertyShowCaption' => (bool) ($uploadProperties['caption']['show'] ?? false),
+            'uploadPropertyRequireCaption' => (bool) ($uploadProperties['caption']['required'] ?? false),
+            'uploadPropertyShowCopyrightNotice' => (bool) ($uploadProperties['copyrightNotice']['show'] ?? true),
+            'uploadPropertyRequireCopyrightNotice' => (bool) ($uploadProperties['copyrightNotice']['required'] ?? false),
         ]);
     }
 
@@ -439,12 +447,14 @@ final class MediaApi
         Types\AssetSourceId $assetSourceId,
         Types\UploadedFile $file,
         Types\AssetReplacementOptions $options,
+        ?Types\UploadProperty $uploadProperties = null,
     ): Types\FileUploadResult {
         return $this->assetMutator->replaceAsset(
             $id,
             $assetSourceId,
             $file,
-            $options
+            $options,
+            $uploadProperties,
         );
     }
 
@@ -479,12 +489,14 @@ final class MediaApi
         Types\AssetSourceId $assetSourceId,
         ?Types\TagId $tagId = null,
         ?Types\AssetCollectionId $assetCollectionId = null,
+        ?Types\UploadProperty $uploadProperties = null,
     ): Types\FileUploadResult {
         return $this->assetMutator->uploadFile(
             $file,
             $assetSourceId,
             $tagId,
             $assetCollectionId,
+            $uploadProperties,
         );
     }
 
@@ -497,12 +509,14 @@ final class MediaApi
         Types\AssetSourceId $assetSourceId,
         ?Types\TagId $tagId = null,
         ?Types\AssetCollectionId $assetCollectionId = null,
+        ?Types\UploadPropertys $uploadProperties = null,
     ): Types\FileUploadResults {
         return $this->assetMutator->uploadFiles(
             $files,
             $assetSourceId,
             $tagId,
             $assetCollectionId,
+            $uploadProperties,
         );
     }
 

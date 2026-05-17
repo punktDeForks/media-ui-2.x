@@ -21,6 +21,18 @@ final class Config
         public readonly bool $canManageAssetCollections,
         public readonly bool $canManageAssets,
         public readonly ?AssetCollectionId $defaultAssetCollectionId = null,
+        #[Description('Whether the title field is shown in the upload dialog')]
+        public readonly bool $uploadPropertyShowTitle = false,
+        #[Description('Whether the title field is required in the upload dialog')]
+        public readonly bool $uploadPropertyRequireTitle = false,
+        #[Description('Whether the caption field is shown in the upload dialog')]
+        public readonly bool $uploadPropertyShowCaption = false,
+        #[Description('Whether the caption field is required in the upload dialog')]
+        public readonly bool $uploadPropertyRequireCaption = false,
+        #[Description('Whether the copyright notice field is shown in the upload dialog')]
+        public readonly bool $uploadPropertyShowCopyrightNotice = true,
+        #[Description('Whether the copyright notice field is required in the upload dialog')]
+        public readonly bool $uploadPropertyRequireCopyrightNotice = false,
     ) {
     }
 }

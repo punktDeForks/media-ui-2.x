@@ -11,6 +11,12 @@ interface ConfigQueryResult {
         canManageAssetCollections: boolean;
         canManageTags: boolean;
         canManageAssets: boolean;
+        uploadPropertyShowTitle: boolean;
+        uploadPropertyRequireTitle: boolean;
+        uploadPropertyShowCaption: boolean;
+        uploadPropertyRequireCaption: boolean;
+        uploadPropertyShowCopyrightNotice: boolean;
+        uploadPropertyRequireCopyrightNotice: boolean;
     };
 }
 
@@ -23,6 +29,12 @@ const DEFAULT_CONFIG: ConfigQueryResult = {
         canManageAssetCollections: false,
         canManageTags: false,
         canManageAssets: false,
+        uploadPropertyShowTitle: false,
+        uploadPropertyRequireTitle: false,
+        uploadPropertyShowCaption: false,
+        uploadPropertyRequireCaption: false,
+        uploadPropertyShowCopyrightNotice: false,
+        uploadPropertyRequireCopyrightNotice: false,
     },
 };
 

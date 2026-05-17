@@ -15,12 +15,13 @@ final class FileUploadResult implements \JsonSerializable
         public readonly bool $success,
         public readonly string $result,
         public readonly ?Filename $filename = null,
+        public readonly ?AssetId $assetId = null,
     ) {
     }
 
-    public static function fromSuccess(string $result, ?Filename $filename = null): self
+    public static function fromSuccess(string $result, ?Filename $filename = null, ?AssetId $assetId = null): self
     {
-        return new self(true, $result, $filename);
+        return new self(true, $result, $filename, $assetId);
     }
 
     public static function fromError(string $result): self
@@ -34,6 +35,7 @@ final class FileUploadResult implements \JsonSerializable
             'filename' => $this->filename,
             'success' => $this->success,
             'result' => $this->result,
+            'assetId' => $this->assetId,
         ];
     }
 }

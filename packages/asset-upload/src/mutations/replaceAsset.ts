@@ -6,8 +6,15 @@ const REPLACE_ASSET = gql`
         $assetSourceId: AssetSourceId!
         $file: UploadedFileInput!
         $options: AssetReplacementOptionsInput!
+        $uploadProperties: UploadPropertyInput
     ) {
-        replaceAsset(id: $id, assetSourceId: $assetSourceId, file: $file, options: $options) {
+        replaceAsset(
+            id: $id
+            assetSourceId: $assetSourceId
+            file: $file
+            options: $options
+            uploadProperties: $uploadProperties
+        ) {
             filename
             success
             result
