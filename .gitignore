@@ -22,8 +22,6 @@ yarn-error.log
 # Compiled assets.
 #
 /packages/dev-server/dist
-Resources/Public/Assets
-Resources/Public/AssetEditor
 
 #
 # editors / IDEs
