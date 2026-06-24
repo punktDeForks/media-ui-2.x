@@ -56,8 +56,10 @@ class MediaSelectionScreen extends React.PureComponent<MediaSelectionScreenProps
             info: (message) => props.addFlashMessage(message, message, 'info'),
             ok: (message) => props.addFlashMessage(message, message, 'success'),
             notice: (message) => props.addFlashMessage(message, message, 'info'),
-            warning: (title, message = '') => props.addFlashMessage(title, message, 'error'),
-            error: (title, message = '') => props.addFlashMessage(title, message, 'error'),
+            warning: (title, message = '') =>
+                props.addFlashMessage(title, typeof message === 'string' && message ? message : title, 'error'),
+            error: (title, message = '') =>
+                props.addFlashMessage(title, typeof message === 'string' && message ? message : title, 'error'),
         };
     }
 

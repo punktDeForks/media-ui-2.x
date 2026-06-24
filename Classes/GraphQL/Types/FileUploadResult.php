@@ -29,6 +29,11 @@ final class FileUploadResult implements \JsonSerializable
         return new self(false, $result);
     }
 
+    public static function fromExists(?Filename $filename = null, ?AssetId $assetId = null): self
+    {
+        return new self(false, 'EXISTS', $filename, $assetId);
+    }
+
     public function jsonSerialize(): array
     {
         return [

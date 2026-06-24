@@ -105,6 +105,10 @@
                 <source>Some files could not be uploaded</source>
                 <target>Einige Dateien konnten nicht hochgeladen werden</target>
             </trans-unit>
+            <trans-unit id="uploadDialog.uploadFinishedExists" xml:space="preserve" approved="yes">
+                <source>The image already exists in the media library</source>
+                <target>Das Bild ist bereits in der Mediathek vorhanden</target>
+            </trans-unit>
             <trans-unit id="uploadDialog.warning.fileRejected" xml:space="preserve" approved="yes">
                 <source>The given file cannot be uploaded.</source>
                 <target>Die Datei kann nicht hochgeladen werden.</target>

@@ -77,8 +77,13 @@ const NewAssetUpload: React.FC<NewAssetUploadProps> = ({ onComplete }) => {
                 }));
                 const firstResult = results[0];
                 if (!firstResult || !firstResult.success) {
+                    const allExist = results.length > 0 && results.every((result) => result.result === 'EXISTS');
+                    const existingName = firstResult?.filename;
                     Notify.warning(
-                        translate('uploadDialog.uploadFinishedWithErrors', 'Some files could not be uploaded')
+                        allExist
+                            ? translate('uploadDialog.uploadFinishedExists', 'The image already exists in the media library') +
+                                  (existingName ? `: ${existingName}` : '')
+                            : translate('uploadDialog.uploadFinishedWithErrors', 'Some files could not be uploaded')
                     );
                 } else {
                     Notify.ok(translate('uploadDialog.uploadFinished', 'Upload finished'));

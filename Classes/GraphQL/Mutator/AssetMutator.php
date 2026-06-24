@@ -476,48 +476,57 @@ class AssetMutator
             $resource->setFilename($filename);
             $resource->setMediaType($file->clientMediaType);
 
-            if (!$this->assetRepository->findOneByResourceSha1($resource->getSha1())) {
-                try {
-                    $className = $this->mappingStrategy->map($resource);
-                    /** @var Asset $asset */
-                    $asset = new $className($resource);
+            $existingAsset = $this->assetRepository->findOneByResourceSha1($resource->getSha1());
+            if ($existingAsset !== null) {
+                // An asset with the same content (sha1) already exists – report its name so the
+                // editor can see which asset in the media library the upload was deduplicated to.
+                $existingResource = $existingAsset->getResource();
+                return Types\FileUploadResult::fromExists(
+                    $existingResource !== null ? Types\Filename::fromString($existingResource->getFilename()) : null,
+                    Types\AssetId::fromString($this->persistenceManager->getIdentifierByObject($existingAsset))
+                );
+            }
 
-                    if ($this->persistenceManager->isNewObject($asset)) {
-                        if ($uploadProperties) {
-                            $this->applyUploadProperties($asset, $uploadProperties);
-                        }
-                        if ($tagId) {
-                            /** @var Tag $tag */
-                            $tag = $this->tagRepository->findByIdentifier($tagId->value);
-                            if ($tag) {
-                                $asset->addTag($tag);
-                            }
-                        }
-                        if ($assetCollectionId) {
-                            /** @var AssetCollection $assetCollection */
-                            $assetCollection = $this->assetCollectionRepository->findByIdentifier(
-                                $assetCollectionId->value
-                            );
-                        } else {
-                            // Assign the asset to the asset collection of the site it has been uploaded to
-                            $assetCollection = $this->assetCollectionService->getDefaultCollectionForCurrentSite();
-                        }
-                        if ($assetCollection) {
-                            $asset->setAssetCollections(new ArrayCollection([$assetCollection]));
-                        }
+            try {
+                $className = $this->mappingStrategy->map($resource);
+                /** @var Asset $asset */
+                $asset = new $className($resource);
 
-                        $this->assetRepository->add($asset);
-                        $result = self::STATE_ADDED;
-                        $assetId = Types\AssetId::fromString($this->persistenceManager->getIdentifierByObject($asset));
-                        return Types\FileUploadResult::fromSuccess(
-                            $result,
-                            Types\Filename::fromString($filename),
-                            $assetId
-                        );
+                if ($this->persistenceManager->isNewObject($asset)) {
+                    if ($uploadProperties) {
+                        $this->applyUploadProperties($asset, $uploadProperties);
                     }
-                } catch (IllegalObjectTypeException $e) {
-                    $this->logger->error('Type of uploaded file cannot be stored: ' . $e->getMessage());
+                    if ($tagId) {
+                        /** @var Tag $tag */
+                        $tag = $this->tagRepository->findByIdentifier($tagId->value);
+                        if ($tag) {
+                            $asset->addTag($tag);
+                        }
+                    }
+                    if ($assetCollectionId) {
+                        /** @var AssetCollection $assetCollection */
+                        $assetCollection = $this->assetCollectionRepository->findByIdentifier(
+                            $assetCollectionId->value
+                        );
+                    } else {
+                        // Assign the asset to the asset collection of the site it has been uploaded to
+                        $assetCollection = $this->assetCollectionService->getDefaultCollectionForCurrentSite();
+                    }
+                    if ($assetCollection) {
+                        $asset->setAssetCollections(new ArrayCollection([$assetCollection]));
+                    }
+
+                    $this->assetRepository->add($asset);
+                    $result = self::STATE_ADDED;
+                    $assetId = Types\AssetId::fromString($this->persistenceManager->getIdentifierByObject($asset));
+                    return Types\FileUploadResult::fromSuccess(
+                        $result,
+                        Types\Filename::fromString($filename),
+                        $assetId
+                    );
                 }
+            } catch (IllegalObjectTypeException $e) {
+                $this->logger->error('Type of uploaded file cannot be stored: ' . $e->getMessage());
             }
         }
 

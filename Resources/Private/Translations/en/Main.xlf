@@ -80,6 +80,9 @@
             <trans-unit id="uploadDialog.uploadFinishedWithErrors" xml:space="preserve" approved="yes">
                 <source>Some files could not be uploaded</source>
             </trans-unit>
+            <trans-unit id="uploadDialog.uploadFinishedExists" xml:space="preserve" approved="yes">
+                <source>The image already exists in the media library</source>
+            </trans-unit>
             <trans-unit id="uploadDialog.warning.fileRejected" xml:space="preserve" approved="yes">
                 <source>The given file cannot be uploaded.</source>
             </trans-unit>

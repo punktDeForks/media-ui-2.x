@@ -51,8 +51,10 @@ export class MediaDetailsScreen extends React.PureComponent<MediaDetailsScreenPr
             info: (message) => props.addFlashMessage(message, message, 'info'),
             ok: (message) => props.addFlashMessage(message, message, 'success'),
             notice: (message) => props.addFlashMessage(message, message, 'info'),
-            warning: (title, message = '') => props.addFlashMessage(title, message, 'error'),
-            error: (title, message = '') => props.addFlashMessage(title, message, 'error'),
+            warning: (title, message = '') =>
+                props.addFlashMessage(title, typeof message === 'string' && message ? message : title, 'error'),
+            error: (title, message = '') =>
+                props.addFlashMessage(title, typeof message === 'string' && message ? message : title, 'error'),
         };
     }
 
@@ -129,8 +131,10 @@ export class MediaDetailsScreen extends React.PureComponent<MediaDetailsScreenPr
             info: (message) => addFlashMessage(message, message, 'info'),
             ok: (message) => addFlashMessage(message, message, 'success'),
             notice: (message) => addFlashMessage(message, message, 'info'),
-            warning: (title, message = '') => addFlashMessage(title, message, 'error'),
-            error: (title, message = '') => addFlashMessage(title, message, 'error'),
+            warning: (title, message = '') =>
+                addFlashMessage(title, typeof message === 'string' && message ? message : title, 'error'),
+            error: (title, message = '') =>
+                addFlashMessage(title, typeof message === 'string' && message ? message : title, 'error'),
         };
 
         return (
