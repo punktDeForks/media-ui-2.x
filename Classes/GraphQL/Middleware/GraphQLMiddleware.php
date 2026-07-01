@@ -81,6 +81,17 @@ final class GraphQLMiddleware implements MiddlewareInterface
             // Simulate a request to the specified controller to trigger authentication
             $mockActionRequest->setControllerObjectName($this->simulateControllerObjectName);
             $this->securityContext->setRequest($mockActionRequest);
+            // Actually authenticate the (backend) user for this request. Merely setting the
+            // request is not enough: without a resolved account the Flownative OIDC
+            // SetJwtCookieMiddleware would consider the user unauthenticated and delete the
+            // JWT cookie, breaking the *next* backend request (redirect to the IdP -> XHR
+            // "Failed to fetch"). Authenticating keeps the account (and thus the cookie) intact.
+            try {
+                $this->serviceLocator->get(\Neos\Flow\Security\Authentication\AuthenticationManagerInterface::class)->authenticate();
+            } catch (\Neos\Flow\Security\Exception\AuthenticationRequiredException) {
+                // No authenticated backend user for this request; the GraphQL resolvers still
+                // enforce access. Do not break the request here.
+            }
         }
         $response = $this->responseFactory->createResponse();
         $response = $this->addCorsHeaders($response);
