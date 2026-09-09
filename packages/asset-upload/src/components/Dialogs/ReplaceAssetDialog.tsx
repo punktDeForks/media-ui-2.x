@@ -98,7 +98,8 @@ const ReplaceAssetDialog: React.FC = () => {
                 closeDialog();
                 void refetch();
             } catch (error) {
-                Notify.error(translate('assetReplacement.error', 'Replacement failed'), error);
+                const title = translate('assetReplacement.error', 'Replacement failed');
+                Notify.error(title, typeof error === 'string' && error ? error : title);
             }
         }
     }, [

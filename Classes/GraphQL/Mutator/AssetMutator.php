@@ -360,7 +360,7 @@ class AssetMutator
                     $this->applyUploadProperties($asset, $uploadProperties);
                     $this->assetRepository->update($asset);
                 }
-                return Types\FileUploadResult::fromSuccess(self::STATE_REPLACED, $filename);
+                return Types\FileUploadResult::fromSuccess(self::STATE_REPLACED, Types\Filename::fromString($filename));
             } catch (\Exception $e) {
                 $this->logger->error(
                     sprintf(

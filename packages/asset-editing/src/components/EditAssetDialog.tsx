@@ -46,7 +46,8 @@ const EditAssetDialog: React.FC = () => {
                 closeDialog();
                 void refetch();
             } catch (error) {
-                Notify.error(translate('EditAssetDialog.updateError', 'Update failed'), error);
+                const title = translate('EditAssetDialog.updateError', 'Update failed');
+                Notify.error(title, typeof error === 'string' && error ? error : title);
             }
         }
     }, [

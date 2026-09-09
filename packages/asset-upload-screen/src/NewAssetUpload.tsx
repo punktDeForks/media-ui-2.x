@@ -94,7 +94,8 @@ const NewAssetUpload: React.FC<NewAssetUploadProps> = ({ onComplete }) => {
                 setUploadPossible(false);
             })
             .catch((error) => {
-                Notify.error(translate('fileUpload.error', 'Upload failed'), error);
+                const title = translate('fileUpload.error', 'Upload failed');
+                Notify.error(title, typeof error === 'string' && error ? error : title);
             });
     }, [uploadFiles, dialogState.files.selected, setFiles, setUploadPossible, Notify, translate, onComplete]);
 
