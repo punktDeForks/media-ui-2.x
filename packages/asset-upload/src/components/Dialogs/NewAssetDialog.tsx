@@ -110,7 +110,12 @@ const NewAssetDialog: React.FC = () => {
             style="wide"
         >
             <section className={classes.uploadArea}>
-                <UploadSection files={dialogState.files.selected} loading={loading} onSetFiles={handleSetFiles} />
+                <UploadSection
+                    files={dialogState.files.selected}
+                    loading={loading}
+                    onSetFiles={handleSetFiles}
+                    maxFileSize={config.tusUploadEnabled ? config.tusUploadMaxFileSize : undefined}
+                />
                 <PreviewSection
                     files={dialogState.files}
                     loading={loading}

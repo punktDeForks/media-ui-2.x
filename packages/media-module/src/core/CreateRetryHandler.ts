@@ -1,5 +1,6 @@
 import { ApolloLink, FetchResult, Observable, Operation } from '@apollo/client';
 import { ServerError } from '@apollo/client/link/utils';
+import { getMainDefinition } from '@apollo/client/utilities';
 
 const maxRetries = 2;
 const initialDelay = 300;
@@ -19,8 +20,17 @@ const isRetryableError = (statusCode: number | undefined): boolean => {
  * - 401 (Authentication errors - might be temporary token refresh issues)
  * - 5xx (Server errors)
  */
+// Mutations change data (e.g. uploads create assets), retrying them can create duplicates
+const isMutation = (operation: Operation): boolean => {
+    const definition = getMainDefinition(operation.query);
+    return definition.kind === 'OperationDefinition' && definition.operation === 'mutation';
+};
+
 const createRetryHandler = () => {
     return new ApolloLink((operation: Operation, forward) => {
+        if (isMutation(operation)) {
+            return forward(operation);
+        }
         return new Observable((observer) => {
             let retryCount = 0;
 

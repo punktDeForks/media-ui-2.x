@@ -29,6 +29,7 @@ use Flowpack\Media\Ui\Service\AssetChangeLog;
 use Flowpack\Media\Ui\Service\AssetCollectionService;
 use Flowpack\Media\Ui\Service\SimilarityService;
 use Flowpack\Media\Ui\Service\UsageDetailsService;
+use Flowpack\Media\Ui\Tus\TusUploadService;
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Persistence\Exception\IllegalObjectTypeException;
 use Neos\Flow\Persistence\Exception\InvalidQueryException;
@@ -69,6 +70,7 @@ final class MediaApi
         private readonly SimilarityService $similarityService,
         private readonly TagMutator $tagMutator,
         private readonly UsageDetailsService $usageDetailsService,
+        private readonly TusUploadService $tusUploadService,
     ) {
     }
 
@@ -221,6 +223,10 @@ final class MediaApi
             'uploadPropertyRequireCaption' => (bool) ($uploadProperties['caption']['required'] ?? false),
             'uploadPropertyShowCopyrightNotice' => (bool) ($uploadProperties['copyrightNotice']['show'] ?? true),
             'uploadPropertyRequireCopyrightNotice' => (bool) ($uploadProperties['copyrightNotice']['required'] ?? false),
+            'tusUploadEnabled' => $this->tusUploadService->isEnabled(),
+            'tusUploadEndpoint' => $this->tusUploadService->getEndpoint(),
+            'tusUploadChunkSize' => $this->tusUploadService->getChunkSize(),
+            'tusUploadMaxFileSize' => $this->tusUploadService->getMaximumFileSize(),
         ]);
     }
 
@@ -513,6 +519,26 @@ final class MediaApi
     ): Types\FileUploadResults {
         return $this->assetMutator->uploadFiles(
             $files,
+            $assetSourceId,
+            $tagId,
+            $assetCollectionId,
+            $uploadProperties,
+        );
+    }
+
+    /**
+     * Imports files which were uploaded via the TUS endpoint and returns an array of results for each upload
+     */
+    #[Mutation]
+    public function importTusUploads(
+        Types\TusUploads $uploads,
+        Types\AssetSourceId $assetSourceId,
+        ?Types\TagId $tagId = null,
+        ?Types\AssetCollectionId $assetCollectionId = null,
+        ?Types\UploadPropertys $uploadProperties = null,
+    ): Types\FileUploadResults {
+        return $this->assetMutator->importTusUploads(
+            $uploads,
             $assetSourceId,
             $tagId,
             $assetCollectionId,

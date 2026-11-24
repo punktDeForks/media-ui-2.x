@@ -17,6 +17,10 @@ interface ConfigQueryResult {
         uploadPropertyRequireCaption: boolean;
         uploadPropertyShowCopyrightNotice: boolean;
         uploadPropertyRequireCopyrightNotice: boolean;
+        tusUploadEnabled: boolean;
+        tusUploadEndpoint: string;
+        tusUploadChunkSize: number;
+        tusUploadMaxFileSize: number;
     };
 }
 
@@ -35,6 +39,10 @@ const DEFAULT_CONFIG: ConfigQueryResult = {
         uploadPropertyRequireCaption: false,
         uploadPropertyShowCopyrightNotice: false,
         uploadPropertyRequireCopyrightNotice: false,
+        tusUploadEnabled: false,
+        tusUploadEndpoint: '',
+        tusUploadChunkSize: 0,
+        tusUploadMaxFileSize: 0,
     },
 };
 

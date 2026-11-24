@@ -33,6 +33,14 @@ final class Config
         public readonly bool $uploadPropertyShowCopyrightNotice = true,
         #[Description('Whether the copyright notice field is required in the upload dialog')]
         public readonly bool $uploadPropertyRequireCopyrightNotice = false,
+        #[Description('Whether new assets are uploaded in chunks via the TUS endpoint')]
+        public readonly bool $tusUploadEnabled = false,
+        #[Description('URL path of the TUS endpoint')]
+        public readonly string $tusUploadEndpoint = '',
+        #[Description('Size of the chunks for uploads via the TUS endpoint')]
+        public readonly ?FileSize $tusUploadChunkSize = null,
+        #[Description('The maximum file size for uploads via the TUS endpoint')]
+        public readonly ?FileSize $tusUploadMaxFileSize = null,
     ) {
     }
 }

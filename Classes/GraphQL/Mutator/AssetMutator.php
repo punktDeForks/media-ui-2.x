@@ -20,11 +20,13 @@ use Flowpack\Media\Ui\GraphQL\Context\AssetSourceContext;
 use Flowpack\Media\Ui\GraphQL\Types;
 use Flowpack\Media\Ui\GraphQL\Types\MutationResult;
 use Flowpack\Media\Ui\Service\AssetCollectionService;
+use Flowpack\Media\Ui\Tus\TusUploadService;
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\I18n\Translator;
 use Neos\Flow\Persistence\Exception\IllegalObjectTypeException;
 use Neos\Flow\Persistence\PersistenceManagerInterface;
 use Neos\Flow\ResourceManagement\Exception as ResourceManagementException;
+use Neos\Flow\ResourceManagement\PersistentResource;
 use Neos\Flow\ResourceManagement\ResourceManager;
 use Neos\Media\Domain\Model\Asset;
 use Neos\Media\Domain\Model\AssetCollection;
@@ -60,6 +62,7 @@ class AssetMutator
         private readonly ResourceManager $resourceManager,
         private readonly TagRepository $tagRepository,
         private readonly Translator $translator,
+        private readonly TusUploadService $tusUploadService,
     ) {
     }
 
@@ -472,62 +475,133 @@ class AssetMutator
             $resource = null;
         }
 
-        if ($resource) {
-            $resource->setFilename($filename);
-            $resource->setMediaType($file->clientMediaType);
+        if (!$resource) {
+            // FIXME: The filename is not unique enough for multiple uploads, we need an id instead or use the sha1
+            return Types\FileUploadResult::fromError(self::STATE_EXISTS);
+        }
 
-            $existingAsset = $this->assetRepository->findOneByResourceSha1($resource->getSha1());
-            if ($existingAsset !== null) {
-                // An asset with the same content (sha1) already exists – report its name so the
-                // editor can see which asset in the media library the upload was deduplicated to.
-                $existingResource = $existingAsset->getResource();
-                return Types\FileUploadResult::fromExists(
-                    $existingResource !== null ? Types\Filename::fromString($existingResource->getFilename()) : null,
-                    Types\AssetId::fromString($this->persistenceManager->getIdentifierByObject($existingAsset))
+        return $this->createAssetFromResource($resource, $filename, $file->clientMediaType, $tagId, $assetCollectionId, $uploadProperties);
+    }
+
+    /**
+     * Imports files which were uploaded in chunks via the TUS protocol (see TusUploadService)
+     * and returns an array of results for each upload
+     */
+    public function importTusUploads(
+        Types\TusUploads $uploads,
+        Types\AssetSourceId $assetSourceId,
+        ?Types\TagId $tagId = null,
+        ?Types\AssetCollectionId $assetCollectionId = null,
+        ?Types\UploadPropertys $uploadProperties = null,
+    ): Types\FileUploadResults {
+        if ($assetSourceId->value !== 'neos') {
+            return Types\FileUploadResults::fromArray([Types\FileUploadResult::fromError(self::STATE_UNSUPPORTED)]);
+        }
+        $results = [];
+        foreach ($uploads as $upload) {
+            $results[$upload->filename] = $this->importTusUpload(
+                $upload,
+                $tagId,
+                $assetCollectionId,
+                $uploadProperties?->findByFilename($upload->filename),
+            );
+        }
+        return Types\FileUploadResults::fromArray($results);
+    }
+
+    private function importTusUpload(
+        Types\TusUpload $upload,
+        ?Types\TagId $tagId,
+        ?Types\AssetCollectionId $assetCollectionId,
+        ?Types\UploadProperty $uploadProperties,
+    ): Types\FileUploadResult {
+        $completedUpload = $this->tusUploadService->getCompletedUpload($upload->uploadId);
+        if ($completedUpload === null) {
+            $this->logger->error(sprintf('TUS upload %s of file "%s" is unknown or not complete', $upload->uploadId, $upload->filename));
+            return Types\FileUploadResult::fromError(self::STATE_ERROR);
+        }
+
+        try {
+            // Imports the file without loading it into memory
+            $resource = $this->resourceManager->importResource($completedUpload['path']);
+        } catch (ResourceManagementException $e) {
+            $this->logger->error(sprintf('Could not import TUS upload of file "%s": %s', $upload->filename, $e->getMessage()));
+            return Types\FileUploadResult::fromError(self::STATE_ERROR);
+        } finally {
+            $this->tusUploadService->removeUpload($upload->uploadId);
+        }
+
+        $mediaType = $completedUpload['metadata']['filetype'] ?? null;
+        return $this->createAssetFromResource($resource, $upload->filename, $mediaType ?: null, $tagId, $assetCollectionId, $uploadProperties);
+    }
+
+    private function createAssetFromResource(
+        PersistentResource $resource,
+        string $filename,
+        ?string $mediaType,
+        ?Types\TagId $tagId,
+        ?Types\AssetCollectionId $assetCollectionId,
+        ?Types\UploadProperty $uploadProperties,
+    ): Types\FileUploadResult {
+        $resource->setFilename($filename);
+        if ($mediaType !== null) {
+            $resource->setMediaType($mediaType);
+        }
+
+        $existingAsset = $this->assetRepository->findOneByResourceSha1($resource->getSha1());
+        if ($existingAsset !== null) {
+            // An asset with the same content (sha1) already exists – report its name so the
+            // editor can see which asset in the media library the upload was deduplicated to.
+            $existingResource = $existingAsset->getResource();
+            // The just imported resource is not used. Its data is shared with the existing asset by the sha1,
+            // so deleteResource() only removes the resource object and keeps the data of the existing asset.
+            $this->resourceManager->deleteResource($resource);
+            return Types\FileUploadResult::fromExists(
+                $existingResource !== null ? Types\Filename::fromString($existingResource->getFilename()) : null,
+                Types\AssetId::fromString($this->persistenceManager->getIdentifierByObject($existingAsset))
+            );
+        }
+
+        try {
+            $className = $this->mappingStrategy->map($resource);
+            /** @var Asset $asset */
+            $asset = new $className($resource);
+
+            if ($this->persistenceManager->isNewObject($asset)) {
+                if ($uploadProperties) {
+                    $this->applyUploadProperties($asset, $uploadProperties);
+                }
+                if ($tagId) {
+                    /** @var Tag $tag */
+                    $tag = $this->tagRepository->findByIdentifier($tagId->value);
+                    if ($tag) {
+                        $asset->addTag($tag);
+                    }
+                }
+                if ($assetCollectionId) {
+                    /** @var AssetCollection $assetCollection */
+                    $assetCollection = $this->assetCollectionRepository->findByIdentifier(
+                        $assetCollectionId->value
+                    );
+                } else {
+                    // Assign the asset to the asset collection of the site it has been uploaded to
+                    $assetCollection = $this->assetCollectionService->getDefaultCollectionForCurrentSite();
+                }
+                if ($assetCollection) {
+                    $asset->setAssetCollections(new ArrayCollection([$assetCollection]));
+                }
+
+                $this->assetRepository->add($asset);
+                $result = self::STATE_ADDED;
+                $assetId = Types\AssetId::fromString($this->persistenceManager->getIdentifierByObject($asset));
+                return Types\FileUploadResult::fromSuccess(
+                    $result,
+                    Types\Filename::fromString($filename),
+                    $assetId
                 );
             }
-
-            try {
-                $className = $this->mappingStrategy->map($resource);
-                /** @var Asset $asset */
-                $asset = new $className($resource);
-
-                if ($this->persistenceManager->isNewObject($asset)) {
-                    if ($uploadProperties) {
-                        $this->applyUploadProperties($asset, $uploadProperties);
-                    }
-                    if ($tagId) {
-                        /** @var Tag $tag */
-                        $tag = $this->tagRepository->findByIdentifier($tagId->value);
-                        if ($tag) {
-                            $asset->addTag($tag);
-                        }
-                    }
-                    if ($assetCollectionId) {
-                        /** @var AssetCollection $assetCollection */
-                        $assetCollection = $this->assetCollectionRepository->findByIdentifier(
-                            $assetCollectionId->value
-                        );
-                    } else {
-                        // Assign the asset to the asset collection of the site it has been uploaded to
-                        $assetCollection = $this->assetCollectionService->getDefaultCollectionForCurrentSite();
-                    }
-                    if ($assetCollection) {
-                        $asset->setAssetCollections(new ArrayCollection([$assetCollection]));
-                    }
-
-                    $this->assetRepository->add($asset);
-                    $result = self::STATE_ADDED;
-                    $assetId = Types\AssetId::fromString($this->persistenceManager->getIdentifierByObject($asset));
-                    return Types\FileUploadResult::fromSuccess(
-                        $result,
-                        Types\Filename::fromString($filename),
-                        $assetId
-                    );
-                }
-            } catch (IllegalObjectTypeException $e) {
-                $this->logger->error('Type of uploaded file cannot be stored: ' . $e->getMessage());
-            }
+        } catch (IllegalObjectTypeException $e) {
+            $this->logger->error('Type of uploaded file cannot be stored: ' . $e->getMessage());
         }
 
         // FIXME: The filename is not unique enough for multiple uploads, we need an id instead or use the sha1

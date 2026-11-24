@@ -4,6 +4,7 @@
   "type": "neos-package",
   "require": {
     "php": ">=8.3",
+    "ankitpokhrel/tus-php": "^2.4",
     "neos/media": "^8.3",
     "neos/neos": "^8.3",
     "neos/neos-ui": "^8.3",

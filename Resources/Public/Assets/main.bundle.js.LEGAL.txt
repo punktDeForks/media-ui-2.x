@@ -117,6 +117,10 @@ react-dom/cjs/react-dom-server.browser.production.min.js:
    * Copyright 2024 Fonticons, Inc.
    */
 
+tus-js-client/lib.esm/upload.js:
+tus-js-client/lib.esm/browser/fileReader.js:
+  /*! regenerator-runtime -- Copyright (c) 2014-present, Facebook, Inc. -- license (MIT): https://github.com/facebook/regenerator/blob/main/LICENSE */
+
 @fortawesome/fontawesome-svg-core/index.es.js:
   /*!
    * Font Awesome Free 5.15.4 by @fontawesome - https://fontawesome.com
