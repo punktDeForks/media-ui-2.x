@@ -205,7 +205,27 @@ Neos:
         Flowpack.Media.Ui:
           createAssetRedirectsOption: false
 ```
-    
+
+### Chunked uploads via TUS
+
+Large files can be uploaded in chunks via the [TUS protocol](https://tus.io). This avoids the PHP upload limits
+and memory usage for large files, and interrupted uploads can be resumed.
+
+```yaml
+Flowpack:
+  Media:
+    Ui:
+      upload:
+        tus:
+          enabled: true
+          chunkSize: '50MB'
+          maximumFileSize: '2GB'
+```
+
+All chunks of an upload are written to `uploadDirectory`. If your setup has several servers behind a load balancer,
+either use sticky sessions or configure a shared `uploadDirectory` and a shared backend (e.g. Redis) for the cache
+`Flowpack_Media_Ui_TusUploadCache`.
+
 ## Architecture
 
 ### API / GraphQL

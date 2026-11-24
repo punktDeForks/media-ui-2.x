@@ -74,6 +74,19 @@
           hasCrop: *assetVariantResolver
           cropInformation: *assetVariantResolver
 
+'Flowpack\Media\Ui\Tus\FlowCacheStore':
+  scope: singleton
+  arguments:
+    1:
+      object:
+        factoryObjectName: Neos\Flow\Cache\CacheManager
+        factoryMethodName: getCache
+        arguments:
+          1:
+            value: Flowpack_Media_Ui_TusUploadCache
+    2:
+      setting: Flowpack.Media.Ui.upload.tus.expirationTime
+
 'Flowpack.Media.Ui:GraphQLUploadMiddleware':
   className: 'Flowpack\Media\Ui\GraphQL\Middleware\GraphQLUploadMiddleware'
   scope: singleton

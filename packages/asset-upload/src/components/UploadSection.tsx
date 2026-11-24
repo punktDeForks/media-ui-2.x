@@ -13,6 +13,8 @@ interface UploadSectionProps {
     loading: boolean;
     onSetFiles: (files: UploadedFile[]) => void;
     maxFiles?: number;
+    // Overrides the maximum file size from the configuration, e.g. for uploads via TUS
+    maxFileSize?: number;
     acceptedFileTypes?: MediaType | MediaType[] | '';
 }
 
@@ -21,6 +23,7 @@ const UploadSection: React.FC<UploadSectionProps> = ({
     files,
     loading,
     maxFiles,
+    maxFileSize,
     onSetFiles,
 }: UploadSectionProps) => {
     const { translate } = useIntl();
@@ -30,6 +33,7 @@ const UploadSection: React.FC<UploadSectionProps> = ({
     const maxFilesToUpload = maxFiles
         ? Math.min(maxFiles, config?.uploadMaxFileUploadLimit)
         : config?.uploadMaxFileUploadLimit || 1;
+    const maxSize = maxFileSize ?? (config?.uploadMaxFileSize || 0);
 
     const { getRootProps, getInputProps, isDragAccept, isDragActive, isDragReject } = useDropzone({
         onDrop: (acceptedFiles) => {
@@ -78,7 +82,7 @@ const UploadSection: React.FC<UploadSectionProps> = ({
                 );
             });
         },
-        maxSize: config?.uploadMaxFileSize || 0,
+        maxSize,
         maxFiles: maxFilesToUpload,
         multiple: maxFilesToUpload > 1,
         preventDropOnDocument: true,
@@ -104,13 +108,13 @@ const UploadSection: React.FC<UploadSectionProps> = ({
                         "Drag 'n' drop some files here, or click to select files"
                     )}
                 </p>
-                {config?.uploadMaxFileSize > 0 && (
+                {maxSize > 0 && (
                     <p>
                         {translate(
                             'uploadDialog.maxFileSize',
                             'Maximum file size is {size} and file limit is {limit}',
                             {
-                                size: humanFileSize(config.uploadMaxFileSize),
+                                size: humanFileSize(maxSize),
                                 limit: maxFilesToUpload,
                             }
                         )}

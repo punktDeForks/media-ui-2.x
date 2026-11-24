@@ -8,6 +8,19 @@ Flowpack:
         corsOrigin: '*'
       # Properties exposed in the asset upload dialog (per-property show/required toggles)
       upload:
+        # Upload new assets in chunks via the TUS protocol (https://tus.io). This allows uploading large files
+        # independent of the PHP upload limits, and resuming interrupted uploads.
+        tus:
+          enabled: false
+          endpoint: '/neos/media-ui/tus'
+          chunkSize: '50MB'
+          # The completed file is imported in a single request, larger files might exceed proxy or server timeouts
+          maximumFileSize: '2GB'
+          # If several servers handle the chunks of an upload, this has to be a shared directory and the cache
+          # "Flowpack_Media_Ui_TusUploadCache" has to use a shared backend (e.g. Redis)
+          uploadDirectory: '%FLOW_PATH_DATA%Temporary/MediaUiTusUploads'
+          # Seconds after which unfinished uploads are removed
+          expirationTime: 86400
         properties:
           title:
             show: false

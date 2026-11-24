@@ -16,6 +16,10 @@ const CONFIG = gql`
             uploadPropertyRequireCaption
             uploadPropertyShowCopyrightNotice
             uploadPropertyRequireCopyrightNotice
+            tusUploadEnabled
+            tusUploadEndpoint
+            tusUploadChunkSize
+            tusUploadMaxFileSize
         }
     }
 `;
